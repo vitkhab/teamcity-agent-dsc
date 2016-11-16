@@ -175,8 +175,9 @@ function Request-File
     )
 
     Write-Verbose "Downloading $url to $saveAs"
-    $downloader = new-object System.Net.WebClient
-    $downloader.DownloadFile($url, $saveAs)
+    Import-Module BitsTransfer
+    Start-BitsTransfer -Source $url -Destination $saveAs
+
 }
 
 function Expand-ZipFile
@@ -230,7 +231,7 @@ function Install-TeamCityAgent
     $installationZipFilePath = "$AgentHomeDirectory\TeamCityAgent.zip"
     if ((test-path $installationZipFilePath) -ne $true)
     {
-        $TeamCityAgentInstallationZipUrl = "http://$($ServerHostname):$($ServerPort)/update/buildAgent.zip"
+        $TeamCityAgentInstallationZipUrl = "$($ServerHostname):$($ServerPort)/update/buildAgent.zip"
         Write-Verbose "Downloading TeamCity Agent installation zip from $TeamCityAgentInstallationZipUrl to $installationZipFilePath"
         Request-File $TeamCityAgentInstallationZipUrl $installationZipFilePath
         Write-Verbose "Downloaded TeamCity Agent installation zip to $installationZipFilePath"
@@ -247,7 +248,7 @@ function Install-TeamCityAgent
     $AgentBuildParameterHashtable.Keys | % { $agentBuildParametersString += "`n$($_)=$($AgentBuildParameterHashtable.Item($_))" }
 
     Write-TokenReplacedFile "$AgentHomeDirectory\\conf\\buildAgent.dist.properties" $teamCityConfigFile @{
-       'serverUrl=http://localhost:8111/' = "serverUrl=http://$($ServerHostname):$($ServerPort)";
+       'serverUrl=http://localhost:8111/' = "serverUrl=$($ServerHostname):$($ServerPort)";
        'name=' = "name=$AgentName";
        'ownPort=9090' = "ownPort=$AgentPort";
        '#ownAddress=<own IP address or server-accessible domain name>' = "ownAddress=$AgentHostname";
